@@ -10,6 +10,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String       @id @default(cuid())
+  email      String?      @unique
+  name       String?
+  role       Role         @default(STUDENT)
+  createdAt  DateTime     @default(now())
+  passwordHash  String?    
+
+  // Relations
+  counsellor Counsellor?  @relation("UserCounsellor")
+  appointments Appointment[] @relation("StudentAppointments")
+}
+
 // Enums
 enum Role {
   STUDENT
