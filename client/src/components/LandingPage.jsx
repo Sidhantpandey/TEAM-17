@@ -74,8 +74,8 @@ const LandingPage = ({ onGetStarted }) => {
 
       {/* Enhanced Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center px-4 sm:px-6 lg:px-8">
             {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
