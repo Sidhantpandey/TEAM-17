@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import nodemailer from "nodemailer";
 import ical from "ical-generator";
 import "dotenv/config";
-import transporter from "../services/mail.services.js"
+import transporter from "../services/mail.services.js";
 
 const redis = new Redis(process.env.REDIS_URL);
 const router = express.Router();
@@ -156,7 +156,6 @@ export const availability = async (req, res) => {
 
 //Booking Controller
 export const booking = async (req, res) => {
-  
   const {
     counsellorId,
     sessionToken,
@@ -224,14 +223,14 @@ export const booking = async (req, res) => {
     } else if (mode === "OFFLINE") {
       location = counsellor.officeLocation || "Campus Counselling Center";
     }
-const prismaMode = (mode === "OFFLINE") ? "IN_PERSON" : mode; // Prisma expects enum names
+    const prismaMode = mode === "OFFLINE" ? "VIDEO" : mode; // Prisma expects enum names
 
     const appointment = await prisma.appointment.create({
       data: {
         counsellorId,
         studentId: studentId || null,
         sessionToken: sessionToken || null,
-        mode:prismaMode,
+        mode: prismaMode,
         startAt: start,
         endAt: end,
         meetingLink: meetingLink || undefined,
@@ -262,7 +261,9 @@ const prismaMode = (mode === "OFFLINE") ? "IN_PERSON" : mode; // Prisma expects 
         from: `"Campus Counselling" <${process.env.SENDER_EMAIL}>`,
         to: counsellorUser?.email || "counsellor@example.com",
         subject: `New booking: ${start.toISOString()}`,
-        text: `A new appointment has been scheduled.\nMode: ${mode}\nLocation: ${location}\nNotes: ${optionalNote || ""}`,
+        text: `A new appointment has been scheduled.\nMode: ${mode}\nLocation: ${location}\nNotes: ${
+          optionalNote || ""
+        }`,
       });
 
       if (studentEmail) {
