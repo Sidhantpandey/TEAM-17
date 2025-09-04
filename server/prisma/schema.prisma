@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,146 +26,65 @@ model User {
   appointments Appointment[] @relation("StudentAppointments")
 }
 
-// Enums
 enum Role {
   STUDENT
-  MODERATOR
+  COUNSELLOR
   ADMIN
+  VOLUNTEER
 }
 
-enum FlagStatus {
-  PENDING
-  REVIEWED
-  RESOLVED
-  DISMISSED
+model Counsellor {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation("UserCounsellor", fields: [userId], references: [id])
+  displayName     String
+  timezone        String        // IANA e.g. "Asia/Kolkata"
+  defaultDuration Int           @default(30) // minutes
+  availability    Availability[]
+  appointments    Appointment[] @relation("CounsellorAppointments")
+  createdAt       DateTime      @default(now())
+  calendarOAuth   Json?         // encrypted blob if used
 }
 
-enum NotificationType {
-  REPLY
-  MENTION
-  MODERATION
-  SYSTEM
+model Availability {
+  id           String     @id @default(cuid())
+  counsellorId String
+  counsellor   Counsellor @relation(fields: [counsellorId], references: [id])
+  weekday      Int        // 0=Sun ... 6=Sat
+  startTime    String     // "09:00"
+  endTime      String     // "17:00"
 }
 
-enum ModerationAction {
-  APPROVE
-  EDIT
-  REMOVE
-  FLAG
-  UNFLAG
+model Appointment {
+  id             String     @id @default(cuid())
+  counsellorId   String
+  counsellor     Counsellor @relation("CounsellorAppointments", fields: [counsellorId], references: [id])
+
+  // Student (optional relation)
+  studentId      String?
+  student        User?      @relation("StudentAppointments", fields: [studentId], references: [id])
+
+  sessionToken   String?    // for anonymous users
+  mode           AppointmentMode
+  startAt        DateTime
+  endAt          DateTime
+  status         AppointmentStatus @default(SCHEDULED)
+  meetingLink    String?
+  icsLink        String?
+  notesEncrypted String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
-// Models
-model User {
-  id                    String   @id @default(cuid())
-  email                 String   @unique
-  passwordHash          String
-  displayName           String   // Anonymous display name chosen during registration
-  role                  Role     @default(STUDENT)
-  isActive              Boolean  @default(true)
-  notificationPrefs     Json     @default("{\"replies\": true, \"mentions\": true}")
-  lastActivity          DateTime @default(now())
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  posts                 Post[]
-  replies               Reply[]
-  moderationLogs        ModerationLog[]
-  notifications         Notification[]
-  reportedFlags         Flag[]   @relation("FlagReporter")
-  reviewedFlags         Flag[]   @relation("FlagReviewer")
+enum AppointmentMode {
+  VIDEO
+  PHONE
+  IN_PERSON
+  HELPLINE
 }
 
-model Category {
-  id          String  @id @default(cuid())
-  name        String  @unique  // e.g., "Anxiety", "Depression", "Academic Stress"
-  description String
-  color       String
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
-  
-  posts       Post[]
-}
-
-model Post {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  authorId    String
-  categoryId  String
-  isAnonymous Boolean  @default(true)
-  isFlagged   Boolean  @default(false)
-  isApproved  Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  author      User     @relation(fields: [authorId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
-  replies     Reply[]
-  flags       Flag[]
-}
-
-model Reply {
-  id          String   @id @default(cuid())
-  content     String
-  authorId    String
-  postId      String
-  parentId    String?  // For nested replies
-  isAnonymous Boolean  @default(true)
-  isFlagged   Boolean  @default(false)
-  isApproved  Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  author      User     @relation(fields: [authorId], references: [id])
-  post        Post     @relation(fields: [postId], references: [id])
-  parent      Reply?   @relation("ReplyToReply", fields: [parentId], references: [id])
-  children    Reply[]  @relation("ReplyToReply")
-  flags       Flag[]
-}
-
-model Flag {
-  id          String     @id @default(cuid())
-  reason      String
-  description String?
-  reporterId  String
-  postId      String?
-  replyId     String?
-  status      FlagStatus @default(PENDING)
-  isAutomatic Boolean    @default(false)  // True for system-generated flags
-  createdAt   DateTime   @default(now())
-  reviewedAt  DateTime?
-  reviewedBy  String?
-  
-  reporter    User   @relation("FlagReporter", fields: [reporterId], references: [id])
-  post        Post?  @relation(fields: [postId], references: [id])
-  reply       Reply? @relation(fields: [replyId], references: [id])
-  reviewer    User?  @relation("FlagReviewer", fields: [reviewedBy], references: [id])
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  postId    String?          // Reference to related post for navigation
-  replyId   String?          // Reference to related reply for navigation
-  createdAt DateTime         @default(now())
-  
-  user      User @relation(fields: [userId], references: [id])
-}
-
-model ModerationLog {
-  id          String           @id @default(cuid())
-  moderatorId String
-  action      ModerationAction
-  targetType  String           // "post" or "reply"
-  targetId    String
-  reason      String?
-  details     String?
-  createdAt   DateTime         @default(now())
-  
-  moderator   User @relation(fields: [moderatorId], references: [id])
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
 }
