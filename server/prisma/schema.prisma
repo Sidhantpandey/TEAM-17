@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String       @id @default(cuid())
+  email      String?      @unique
+  name       String?
+  role       Role         @default(STUDENT)
+  createdAt  DateTime     @default(now())
+
+  // Relations
+  counsellor Counsellor?  @relation("UserCounsellor")
+  appointments Appointment[] @relation("StudentAppointments")
+}
+
+enum Role {
+  STUDENT
+  COUNSELLOR
+  ADMIN
+  VOLUNTEER
+}
+
+model Counsellor {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation("UserCounsellor", fields: [userId], references: [id])
+  displayName     String
+  timezone        String        // IANA e.g. "Asia/Kolkata"
+  defaultDuration Int           @default(30) // minutes
+  availability    Availability[]
+  appointments    Appointment[] @relation("CounsellorAppointments")
+  createdAt       DateTime      @default(now())
+  calendarOAuth   Json?         // encrypted blob if used
+}
+
+model Availability {
+  id           String     @id @default(cuid())
+  counsellorId String
+  counsellor   Counsellor @relation(fields: [counsellorId], references: [id])
+  weekday      Int        // 0=Sun ... 6=Sat
+  startTime    String     // "09:00"
+  endTime      String     // "17:00"
+}
+
+model Appointment {
+  id             String     @id @default(cuid())
+  counsellorId   String
+  counsellor     Counsellor @relation("CounsellorAppointments", fields: [counsellorId], references: [id])
+
+  // Student (optional relation)
+  studentId      String?
+  student        User?      @relation("StudentAppointments", fields: [studentId], references: [id])
+
+  sessionToken   String?    // for anonymous users
+  mode           AppointmentMode
+  startAt        DateTime
+  endAt          DateTime
+  status         AppointmentStatus @default(SCHEDULED)
+  meetingLink    String?
+  icsLink        String?
+  notesEncrypted String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum AppointmentMode {
+  VIDEO
+  PHONE
+  IN_PERSON
+  HELPLINE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
