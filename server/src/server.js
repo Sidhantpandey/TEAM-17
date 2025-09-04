@@ -33,7 +33,11 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 
 import bookings from "./routes/bookings.routes.js"
+import loginapis from "./routes/auth.routes.js";
+import dashboard from "./routes/dashboard.routes.js";
 app.use("/api/book",bookings);
+app.use("/api/auth",loginapis);
+app.use("/api/dash",dashboard);
 
 
 
