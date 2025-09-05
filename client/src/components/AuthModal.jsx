@@ -1,63 +1,89 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Heart, Shield } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, User, Heart, Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login } = useAuth();
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState("");
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
+    nickname: "",
+    email: "",
+    password: "",
   });
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState("");
 
   const roles = [
     {
-      id: 'student',
-      title: 'Student',
-      description: 'Access counselling, resources, and peer support',
+      id: "student",
+      title: "Student",
+      description: "Join anonymously using a nickname",
       icon: User,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
-      id: 'counsellor',
-      title: 'Counsellor',
-      description: 'Manage appointments and provide professional support',
+      id: "counsellor",
+      title: "Counsellor",
+      description: "Manage appointments and provide professional support",
       icon: Heart,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
-      id: 'volunteer',
-      title: 'Volunteer',
-      description: 'Moderate forums and provide peer support',
+      id: "volunteer",
+      title: "Volunteer",
+      description: "Moderate forums and provide peer support",
       icon: Shield,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
   ];
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedRole) {
-      alert('Please select a role');
+  e.preventDefault();
+
+  if (!selectedRole) {
+    setError("⚠️ Please select a role.");
+    return;
+  }
+
+  if (selectedRole === "student") {
+    if (!formData.nickname.trim()) {
+      setError("⚠️ Please enter a nickname.");
       return;
     }
 
-    // Simulate successful authentication
-    const userData = {
+    const studentUser = {
       id: Date.now(),
-      name: formData.name || formData.email.split('@')[0],
-      email: formData.email,
-      role: selectedRole,
+      name: formData.nickname,
+      role: "student",
     };
 
-    login(userData);
+    localStorage.setItem("user", JSON.stringify(studentUser));
+    setError("");
     onClose();
-  };
+
+    // 🔄 reload so routing picks up
+    window.location.reload();
+    return;
+  }
+
+  // Counsellor/Volunteer login with AuthContext
+  const success = login(formData.email, formData.password);
+  if (!success) {
+    setError("❌ Invalid email or password.");
+    return;
+  }
+
+  setError("");
+  onClose();
+
+  // 🔄 reload here too
+  window.location.reload();
+};
+
 
   if (!isOpen) return null;
 
@@ -81,7 +107,11 @@ const AuthModal = ({ isOpen, onClose }) => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
-                {isLogin ? 'Welcome Back' : 'Join MindCare'}
+                {selectedRole === "student"
+                  ? "Join Anonymously"
+                  : isLogin
+                  ? "Welcome Back"
+                  : "Join MindCare"}
               </h2>
               <button
                 onClick={onClose}
@@ -93,7 +123,9 @@ const AuthModal = ({ isOpen, onClose }) => {
 
             {!selectedRole ? (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Your Role</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Select Your Role
+                </h3>
                 <div className="space-y-3">
                   {roles.map((role) => (
                     <motion.button
@@ -106,8 +138,12 @@ const AuthModal = ({ isOpen, onClose }) => {
                       <div className="flex items-center">
                         <role.icon className={`h-8 w-8 ${role.color} mr-4`} />
                         <div>
-                          <h4 className="font-semibold text-gray-900">{role.title}</h4>
-                          <p className="text-sm text-gray-600">{role.description}</p>
+                          <h4 className="font-semibold text-gray-900">
+                            {role.title}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {role.description}
+                          </p>
                         </div>
                       </div>
                     </motion.button>
@@ -116,19 +152,21 @@ const AuthModal = ({ isOpen, onClose }) => {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Role Badge */}
                 <div className="bg-primary-50 p-3 rounded-lg mb-4">
                   <div className="flex items-center">
                     {(() => {
-                      const selectedRoleData = roles.find(r => r.id === selectedRole);
+                      const selectedRoleData = roles.find(
+                        (r) => r.id === selectedRole
+                      );
                       if (!selectedRoleData) return null;
-                      
                       const SelectedRoleIcon = selectedRoleData.icon;
-                      
+
                       return (
                         <>
-                          {SelectedRoleIcon && (
-                            <SelectedRoleIcon className={`h-5 w-5 ${selectedRoleData.color} mr-2`} />
-                          )}
+                          <SelectedRoleIcon
+                            className={`h-5 w-5 ${selectedRoleData.color} mr-2`}
+                          />
                           <span className="font-medium text-gray-900">
                             {selectedRoleData.title}
                           </span>
@@ -137,7 +175,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                     })()}
                     <button
                       type="button"
-                      onClick={() => setSelectedRole('')}
+                      onClick={() => setSelectedRole("")}
                       className="ml-auto text-primary-600 hover:text-primary-700 text-sm"
                     >
                       Change
@@ -145,51 +183,58 @@ const AuthModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {!isLogin && (
+                {/* Student → only nickname */}
+                {selectedRole === "student" ? (
                   <input
                     type="text"
-                    placeholder="Full Name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Enter a nickname"
+                    value={formData.nickname}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nickname: e.target.value })
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     required
                   />
+                ) : (
+                  <>
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    />
+
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    />
+                  </>
                 )}
 
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                />
+                {/* Error */}
+                {error && (
+                  <p className="text-red-500 text-sm font-medium">{error}</p>
+                )}
 
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                />
-
+                {/* Submit */}
                 <button
                   type="submit"
                   className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors duration-200"
                 >
-                  {isLogin ? 'Sign In' : 'Create Account'}
+                  {selectedRole === "student"
+                    ? "Join Anonymously"
+                    : "Sign In"}
                 </button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-primary-600 hover:text-primary-700 text-sm"
-                  >
-                    {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-                  </button>
-                </div>
               </form>
             )}
           </div>

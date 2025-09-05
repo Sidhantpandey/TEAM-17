@@ -4,6 +4,7 @@ import AiChatSection from "../AiChatSection";
 import BookingSection from "../BookingSection";
 import ResourcesSection from "../ResourcesSection";
 import CommunitySection from "../CommunitySection";
+import AnonymousSharingComponent from "../Journalmodal"; // Import the new component
 import logo from "../../assets/logo.png";
 import {
   MessageCircle, 
@@ -20,7 +21,8 @@ import {
   Clock,
   ArrowRight,
   Menu,
-  X 
+  X,
+  Shield // Added Shield icon for Anonymous Sharing
 } from "lucide-react";
 
 // Router Context
@@ -157,6 +159,23 @@ const ForumSectioncomp = () => {
   );
 };
 
+// Anonymous Sharing Component Wrapper
+const AnonymousSharingSectioncomp = () => {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <AnonymousSharingComponent />
+    </div>
+  );
+};
+
+const JournalSectioncomp = () => {
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <CommunitySection />
+    </div>
+  );
+};
+
 // Dashboard Layout Component
 const DashboardLayout = ({ user, onLogout }) => {
   const { currentPath, navigate } = useRouter();
@@ -168,6 +187,8 @@ const DashboardLayout = ({ user, onLogout }) => {
     if (path.includes('/appointments')) return 'appointments';
     if (path.includes('/resources')) return 'resources';
     if (path.includes('/forum')) return 'forum';
+    if (path.includes('/anonymous-sharing')) return 'anonymous-sharing';
+    if(path.includes('/journal')) return 'journal';
     return 'chatbot';
   };
 
@@ -186,6 +207,9 @@ const DashboardLayout = ({ user, onLogout }) => {
         break;
       case 'forum':
         navigate('/dashboard/forum');
+        break;
+      case 'anonymous-sharing':
+        navigate('/dashboard/anonymous-sharing');
         break;
       default:
         navigate('/dashboard/ai-chat');
@@ -221,6 +245,13 @@ const DashboardLayout = ({ user, onLogout }) => {
       description: "Connect with fellow students",
       path: "/dashboard/forum"
     },
+    {
+      id: "anonymous-sharing",
+      label: "Safe Space",
+      icon: Shield,
+      description: "Share anonymously, support authentically",
+      path: "/dashboard/anonymous-sharing"
+    }
   ];
 
   return (
@@ -261,13 +292,6 @@ const DashboardLayout = ({ user, onLogout }) => {
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
-
-              {/* <Link 
-                to="/dashboard/ai-chat"
-                className="bg-teal-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-teal-700 transition-colors flex items-center"
-              >
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
-              </Link> */}
             </div>
 
             {/* Mobile Menu Button */}
@@ -472,6 +496,7 @@ const DashboardLayout = ({ user, onLogout }) => {
             <Route path="/dashboard/appointments" element={<AppointmentsSectioncomp />} />
             <Route path="/dashboard/resources" element={<ResourcesSectioncomp />} />
             <Route path="/dashboard/forum" element={<ForumSectioncomp />} />
+            <Route path="/dashboard/anonymous-sharing" element={<AnonymousSharingSectioncomp user={user} />} />
             <Route path="/dashboard" element={<Navigate to="/dashboard/ai-chat" replace />} />
             <Route path="/" element={<Navigate to="/dashboard/ai-chat" replace />} />
           </Routes>
