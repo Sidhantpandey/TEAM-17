@@ -4,6 +4,7 @@ import AiChatSection from "../AiChatSection";
 import BookingSection from "../BookingSection";
 import ResourcesSection from "../ResourcesSection";
 import CommunitySection from "../CommunitySection";
+import logo from "../../assets/logo.png";
 import {
   MessageCircle, 
   Calendar, 
@@ -231,10 +232,10 @@ const DashboardLayout = ({ user, onLogout }) => {
             {/* Logo and Brand */}
             <Link to="/dashboard/ai-chat" className="flex items-center">
               <div className="h-10 w-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center mr-4">
-                <Heart className="h-6 w-6 text-white" />
+                <img src={logo} alt="" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">MindCare</h1>
+                <h1 className="text-xl font-bold text-gray-900">Mind Space</h1>
                 <p className="text-sm text-gray-600">Welcome back, {user.name}</p>
               </div>
             </Link>
@@ -261,12 +262,12 @@ const DashboardLayout = ({ user, onLogout }) => {
                 </button>
               </div>
 
-              <Link 
+              {/* <Link 
                 to="/dashboard/ai-chat"
                 className="bg-teal-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-teal-700 transition-colors flex items-center"
               >
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+              </Link> */}
             </div>
 
             {/* Mobile Menu Button */}

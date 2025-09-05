@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Heart, Shield, Users, Brain, ArrowRight, Star, MessageCircle, Calendar, CheckCircle } from 'lucide-react';
-
+import logo from "../assets/logo.png"
 const LandingPage = ({ onGetStarted }) => {
   const features = [
     {
@@ -58,8 +58,8 @@ const LandingPage = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <Brain className="h-8 w-8 text-teal-600 mr-2" />
-              <span className="text-xl font-bold text-gray-900">MindCare</span>
+              <img src= {logo} alt="" className='w-16 h-16'/>
+              <span className="text-xl font-bold text-gray-900">Mind Space</span>
             </div>
             <button
               onClick={onGetStarted}
